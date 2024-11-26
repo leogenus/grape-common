@@ -1,0 +1,164 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'signing'
+}
+
+group = 'io.leogenus'
+version = '0.0.1'
+
+java {
+    sourceCompatibility = '1.8'
+    withJavadocJar()
+    withSourcesJar()
+}
+
+jar {
+    enabled = true
+    archiveClassifier = ''
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = project.group
+            artifactId = rootProject.name
+            version = project.version
+
+            from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                packaging = "jar"
+                name = 'Grape Common Library'
+                description = 'This Library published for using common classes in grape app'
+
+                url = 'https://gitlab.com/leogenus/demo.git'
+
+                scm {
+                    connection = "scm:https://gitlab.com/leogenus/demo.git"
+                    developerConnection = "scm:git@gitlab.com:leogenus/demo.git"
+                    url = "https://gitlab.com/leogenus/demo"
+                }
+
+                licenses {
+                    license {
+                        name = "The Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = "leogenus"
+                        name = "Sherzod Abdullaev"
+                        email = "leogenus.io@gmail.com"
+                    }
+                }
+            }
+            // todo remove if not needed
+            artifact jar
+            /* todo artifact bootJar*/
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username = "nxlqWpsG"
+                password = "uQI8EuUTev0hXU47fXduAFxEIddS5AR9cn92nDTUX5Yr"
+            }
+
+            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+
+            /*todo example
+            *  val releasesUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            *  val snapshotsUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            *  url = if (version.toString().endsWith("SNAPSHOT")) snapshotsUrl else releasesUrl
+            */
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
+
+import groovy.json.JsonSlurper
+
+tasks.named('signMavenJavaPublication') {
+    doLast {
+        def pomXml = 'build/publications/mavenJava/pom-default.xml'
+        def pomFile = "build/libs/${rootProject.name}-${version}.pom"
+        ant.move(file: pomXml, tofile: pomFile)
+        ant.move(file: pomXml + '.asc', tofile: pomFile + '.asc')
+
+        ant.checksum algorithm: 'md5', file: pomFile, fileext: '.md5'
+        ant.checksum algorithm: 'sha1', file: pomFile, fileext: '.sha1'
+        ant.checksum algorithm: 'sha-256', file: pomFile, fileext: '.sha256'
+        ant.checksum algorithm: 'sha-512', file: pomFile, fileext: '.sha512'
+
+        def inputFile = new File("build/publications/mavenJava/module.json")
+        def json = new JsonSlurper().parseText(inputFile.text)
+        project.logger.info('Module formatVersion: {}', json.formatVersion)
+
+        def libsPath = 'build/libs/'
+        for (variant in json.variants) {
+            if (!['runtimeElements', 'javadocElements', 'sourcesElements']
+                    .contains(variant.name)) continue
+            def files = variant.files
+            for (file in files) {
+                def path = libsPath + file.url
+                project.file("${path}.md5").text = file.md5
+                project.file("${path}.sha1").text = file.sha1
+                project.file("${path}.sha256").text = file.sha256
+                project.file("${path}.sha512").text = file.sha512
+            }
+        }
+
+        def deepPath = "${libsPath}${project.group.replace('.', '/')}/${rootProject.name}/${project.version}/"
+        project.file(deepPath).mkdirs()
+        project.file(libsPath).eachFile { f ->
+            if (!f.isDirectory() && f.exists())
+                ant.move(file: f, tofile: "${deepPath}${f.name}")
+        }
+    }
+}
+
+task collectToZip(type: Zip) {
+    dependsOn signMavenJavaPublication
+    archiveFileName = "${project.group}-${rootProject.name}-${project.version}.zip"
+    destinationDirectory = file('build/')
+    from(files('build/libs/'))
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
+
+    compileOnly 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
+
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+task cleanSignZip {
+    dependsOn 'clean'
+    dependsOn 'signMavenJavaPublication'
+    dependsOn 'collectToZip'
+//    tasks.findByName('sign').mustRunAfter 'clean'
+//    tasks.findByName('collectToZip').mustRunAfter 'build'
+}
