@@ -50,6 +50,16 @@ public enum BlockType {
      * Represents a block for reading a file from fileSystem.
      */
     FILE_READ_BLOCK,
+
+    /**
+     * Represents a block for requesting to other urls
+     */
+    HTTP_EXECUTE_BLOCK,
+
+    /**
+     * Represents a block for calling to another methods
+     */
+    METHOD_CALL_BLOCK,
     ;
 
 }
