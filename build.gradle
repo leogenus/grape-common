@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'io.leogenus'
-version = '0.0.2'
+version = '0.0.4'
 
 java {
     sourceCompatibility = '1.8'

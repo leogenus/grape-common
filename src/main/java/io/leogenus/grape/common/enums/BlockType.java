@@ -60,6 +60,11 @@ public enum BlockType {
      * Represents a block for calling to another methods
      */
     METHOD_CALL_BLOCK,
+
+    /**
+     * Represents a block for exporting data into formats: csv, excel, json or some other types
+     */
+    EXPORT_BLOCK,
     ;
 
 }
