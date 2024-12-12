@@ -65,6 +65,11 @@ public enum BlockType {
      * Represents a block for exporting data into formats: csv, excel, json or some other types
      */
     EXPORT_BLOCK,
+
+    /**
+     * Represents a block for importing data from formats: csv, excel, json or some other types
+     */
+    IMPORT_BLOCK,
     ;
 
 }
