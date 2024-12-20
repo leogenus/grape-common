@@ -70,6 +70,17 @@ public enum BlockType {
      * Represents a block for importing data from formats: csv, excel, json or some other types
      */
     IMPORT_BLOCK,
+
+    /**
+     * Represents a block for managing users in openid like keycloak or other sso mechanism that configured in settings
+     */
+    OPENID_USER_BLOCK,
+
+    /**
+     * Represents a block for managing roles in openid like keycloak or other sso mechanism that configured in settings
+     * and it manage two types: realm roles, client roles name access or permissions
+     */
+    OPENID_ROLE_BLOCK,
     ;
 
 }
