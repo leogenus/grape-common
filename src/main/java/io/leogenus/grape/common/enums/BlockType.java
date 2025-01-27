@@ -81,6 +81,11 @@ public enum BlockType {
      * and it manage two types: realm roles, client roles name access or permissions
      */
     OPENID_ROLE_BLOCK,
+
+    /**
+     * Represents a block for output the log data into flow
+     */
+    LOG_BLOCK,
     ;
 
 }
